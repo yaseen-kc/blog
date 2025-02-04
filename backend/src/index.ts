@@ -17,8 +17,13 @@ app.post('/api/v1/user/signup', async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate())
-  const body = await c.req.json()
   try {
+    const body = await c.req.json()
+
+    if (!body.email || !body.password) {
+      return c.json({ error: 'Email and password are required' }, 400)
+    }
+
     const user = await prisma.user.create({
       data: {
         email: body.email,
@@ -28,15 +33,19 @@ app.post('/api/v1/user/signup', async (c) => {
     const jwt = await sign({ id: user.id }, c.env.JWT_SECRET)
     return c.json({ jwt })
   } catch (e) {
-    return c.status(403)
+    return c.json({ error: 'Something went wrong' }, 500)
   }
 })
 app.post('/api/v1/user/signin', async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate())
-  const body = await c.req.json()
   try {
+    const body = await c.req.json()
+    if (!body.email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
     const user = await prisma.user.findUnique({
       where: {
         email: body.email
@@ -46,6 +55,11 @@ app.post('/api/v1/user/signin', async (c) => {
     if (!user) {
       c.status(403);
       return c.json({ error: "user not found" });
+    }
+
+    if (!c.env.JWT_SECRET) {
+      console.error("JWT_SECRET is missing in environment variables");
+      return c.json({ error: "Internal server error" }, 500);
     }
 
     const jwt = await sign({ id: user.id }, c.env.JWT_SECRET)

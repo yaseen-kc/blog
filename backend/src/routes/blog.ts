@@ -37,6 +37,7 @@ blogRouter.use('/*', async (c, next) => {
             c.status(401)
             return c.json({ Error: "Unauthorized: Invalid token" })
         }
+        // @ts-ignore
         c.set('userId', payload.id)
 
         await next()

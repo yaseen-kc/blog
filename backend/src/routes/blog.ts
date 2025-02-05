@@ -113,8 +113,19 @@ blogRouter.get('/', async (c) => {
         }
 
         return c.json(post)
-    } catch (error) {
-        console.error("Error fetching post:", error);
+    } catch (e) {
+        console.error("Error fetching post:", e);
     }
 })
-blogRouter.get('/bulk', (c) => c.text('Bulk - Post'))
+blogRouter.get('/bulk', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate())
+    try {
+
+        const post = await prisma.post.findMany({})
+        return c.json({ post })
+    } catch (e) {
+        console.error("Error fetching posts:", e);
+    }
+})

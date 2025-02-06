@@ -3,6 +3,10 @@ import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { verify } from 'hono/jwt'
 
+interface JWTPayload {
+    id: string;
+}
+
 export const blogRouter = new Hono<{
     Bindings: {
         DATABASE_URL: string,
@@ -15,12 +19,11 @@ export const blogRouter = new Hono<{
 blogRouter.use('/*', async (c, next) => {
     try {
         const authHeader = c.req.header("Authorization") || ""
-        const user = await verify(authHeader, c.env.JWT_SECRET)
+        const user = await verify(authHeader, c.env.JWT_SECRET) as unknown as JWTPayload;
         if (!user) {
             c.status(403);
             return c.json({ message: "You are not logged in" });
         }
-        // @ts-ignore
         c.set("userId", user.id);
         await next();
     } catch (error) {

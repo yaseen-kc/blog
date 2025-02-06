@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
-import { sign, verify } from 'hono/jwt'
+import { verify } from 'hono/jwt'
 
 export const blogRouter = new Hono<{
     Bindings: {
@@ -14,37 +14,20 @@ export const blogRouter = new Hono<{
 
 blogRouter.use('/*', async (c, next) => {
     try {
-        const jwt = c.req.header('Authorization')
-
-        if (!jwt || !jwt.startsWith('Bearer ')) {
-            return c.json({ error: 'Unauthorized: Missing or invalid token' }, 401)
-        }
-
-        if (!jwt) {
-            c.status(401)
-            return c.json({ Error: "Unauthorized" })
-        }
-
-        const token = jwt.split(' ')[1]
-
-        if (!token) {
-            return c.json({ error: 'Unauthorized: Token not found' }, 401)
-        }
-
-        const payload = await verify(token, c.env.JWT_SECRET)
-
-        if (!payload) {
-            c.status(401)
-            return c.json({ Error: "Unauthorized: Invalid token" })
+        const authHeader = c.req.header("Authorization") || ""
+        const user = await verify(authHeader, c.env.JWT_SECRET)
+        if (!user) {
+            c.status(403);
+            return c.json({ message: "You are not logged in" });
         }
         // @ts-ignore
-        c.set('userId', payload.id)
-
-        await next()
-
-    } catch (e) {
-        console.error(e);
-        return c.json({ error: 'Something went wrong' }, 500)
+        c.set("userId", user.id);
+        await next();
+    } catch (error) {
+        c.status(403)
+        return c.json({
+            message: "You are not logged in"
+        })
     }
 })
 
@@ -58,14 +41,14 @@ blogRouter.post('/', async (c) => {
             data: {
                 title: body.title,
                 content: body.content,
-                authorId: "1"
+                authorId: c.get("userId")
             }
         })
-        return c.json({
-            id: [post.id]
-        })
+        return c.json({ id: post.id });
+
     } catch (e) {
         console.error("Error creating post:", e);
+        return c.json({ error: "Internal server error" }, 500);
     }
 })
 

@@ -81,16 +81,16 @@ blogRouter.put('/', async (c) => {
     }
 });
 
-blogRouter.get('/', async (c) => {
+blogRouter.get('/:id', async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate())
     try {
-        const body = await c.req.json()
+        const postId = c.req.param('id'); // Get ID from URL params
 
         const post = await prisma.post.findUnique({
             where: {
-                id: body.id
+                id: postId
             }
         })
 
@@ -101,6 +101,7 @@ blogRouter.get('/', async (c) => {
         return c.json(post)
     } catch (e) {
         console.error("Error fetching post:", e);
+        return c.json({ error: "Internal server error" }, 500);
     }
 })
 blogRouter.get('/bulk', async (c) => {

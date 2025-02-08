@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { verify } from 'hono/jwt'
+import { createBlogInput, updateBlogInput } from '@yaseenkc/blog-common'
 
 interface JWTPayload {
     id: string;
@@ -40,6 +41,14 @@ blogRouter.post('/', async (c) => {
     }).$extends(withAccelerate())
     try {
         const body = await c.req.json()
+        const result = createBlogInput.safeParse(body)
+        if (!result.success) {
+            c.status(411);
+            return c.json({
+                message: "Invalid post data",
+                errors: result.error.errors
+            })
+        }
         const post = await prisma.post.create({
             data: {
                 title: body.title,
@@ -63,7 +72,14 @@ blogRouter.put('/', async (c) => {
     try {
 
         const body = await c.req.json();
-
+        const result = updateBlogInput.safeParse(body)
+        if (!result.success) {
+            c.status(411);
+            return c.json({
+                message: "Invalid post data",
+                errors: result.error.errors
+            })
+        }
         const updatedPost = await prisma.post.update({
             where: {
                 id: body.id,
@@ -86,7 +102,7 @@ blogRouter.get('/:id', async (c) => {
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate())
     try {
-        const postId = c.req.param('id'); // Get ID from URL params
+        const postId = c.req.param('id');
 
         const post = await prisma.post.findUnique({
             where: {

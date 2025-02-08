@@ -7,6 +7,7 @@
   "dependencies": {
     "@prisma/client": "^6.3.1",
     "@prisma/extension-accelerate": "^1.2.2",
+    "@yaseenkc/blog-common": "^1.0.0",
     "bcryptjs": "^2.4.3",
     "hono": "^4.6.20"
   },

@@ -2,6 +2,8 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { sign } from 'hono/jwt'
+import { signinInput, signupInput } from '@yaseenkc/blog-common'
+
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -16,19 +18,22 @@ userRouter.post('/signup', async (c) => {
     }).$extends(withAccelerate())
     try {
         const body = await c.req.json()
-
-        if (!body.email || !body.password) {
-            return c.json({ error: 'Email and password are required' }, 400)
+        const result = signupInput.safeParse(body)
+        if (!result.success) {
+            c.status(411);
+            return c.json({
+                message: "Invalid input",
+                errors: result.error.errors
+            })
         }
 
         const existingUser = await prisma.user.findUnique({
-            where: { email: body.email }
+            where: { email: result.data.email }
         });
 
         if (existingUser) {
             return c.json({ error: "Email already in use" }, 400);
         }
-
 
         const user = await prisma.user.create({
             data: {
@@ -37,9 +42,7 @@ userRouter.post('/signup', async (c) => {
             }
         })
 
-        console.log("JWT_SECRET:", c.env.JWT_SECRET);
         const jwt = await sign({ id: user.id }, c.env.JWT_SECRET)
-
         return c.json({ jwt })
     } catch (e) {
         console.error(e);
@@ -53,8 +56,13 @@ userRouter.post('/signin', async (c) => {
     }).$extends(withAccelerate())
     try {
         const body = await c.req.json()
-        if (!body.email) {
-            return c.json({ error: "Email is required" }, 400);
+        const result = signinInput.safeParse(body)
+        if (!result.success) {
+            c.status(411)
+            return c.json({
+                message: "Invalid input",
+                errors: result.error.errors
+            })
         }
 
         const user = await prisma.user.findUnique({
@@ -65,15 +73,9 @@ userRouter.post('/signin', async (c) => {
 
         if (!user) {
             c.status(403);
-            return c.json({ error: "user not found" });
+            return c.json({ error: "Invalid credentials" })
         }
 
-        if (!c.env.JWT_SECRET) {
-            console.error("JWT_SECRET is missing in environment variables");
-            return c.json({ error: "Internal server error" }, 500);
-        }
-
-        console.log("JWT_SECRET:", c.env.JWT_SECRET);
 
         const jwt = await sign({ id: user.id }, c.env.JWT_SECRET)
         return c.json({ jwt })

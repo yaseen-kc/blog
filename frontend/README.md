@@ -1,50 +1,92 @@
-# React + TypeScript + Vite
+# Blog Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository contains a full-stack blogging platform built with Cloudflare Workers for the backend and Vite + React for the frontend. The project enables users to create, manage, and read blog posts efficiently.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Backend
 
-## Expanding the ESLint configuration
+- Cloudflare Workers
+- Hono (Web Framework)
+- Prisma (Database ORM)
+- Zod (Data Validation)
+- bcryptjs (Password Hashing)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### Frontend
 
-- Configure the top-level `parserOptions` property like this:
+- React
+- Vite
+- Tailwind CSS
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### Common
+
+- TypeScript
+
+## Installation & Setup
+
+### Clone the Repository
+
+```sh
+git clone https://github.com/your-username/blog-project.git
+cd blog-project
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Install Dependencies
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+#### Backend
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```sh
+cd backend
+npm install
 ```
+
+#### Frontend
+
+```sh
+cd frontend
+npm install
+```
+
+#### Common
+
+```sh
+cd common
+npm install
+```
+
+### Configure Environment Variables
+
+Create a `.env` file in `backend/` and add the required environment variables.
+
+### Run the Project
+
+#### Start Backend
+
+```sh
+cd backend
+npm run dev
+```
+
+#### Start Frontend
+
+```sh
+cd frontend
+npm run dev
+```
+
+## Deployment
+
+### Backend (Cloudflare Workers)
+
+```sh
+cd backend
+npm run deploy
+```
+
+### Frontend
+
+Deploy the frontend using Vercel, Netlify, or any static hosting provider.
+
+## License
+
+This project is open-source and available under the MIT License.

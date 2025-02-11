@@ -12,7 +12,7 @@ export const blogRouter = new Hono<{
     }
 }>();
 
-blogRouter.use('/blog/*', async (c, next) => {
+blogRouter.use('/*', async (c, next) => {
     try {
         const jwt = c.req.header('Authorization')
 
@@ -37,7 +37,6 @@ blogRouter.use('/blog/*', async (c, next) => {
             c.status(401)
             return c.json({ Error: "Unauthorized: Invalid token" })
         }
-
         c.set('userId', payload.id)
 
         await next()
@@ -48,10 +47,52 @@ blogRouter.use('/blog/*', async (c, next) => {
     }
 })
 
+blogRouter.post('/', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate())
+    try {
+        const body = await c.req.json()
+        const post = await prisma.post.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                authorId: "1"
+            }
+        })
+        return c.json({
+            id: [post.id]
+        })
+    } catch (e) {
+        console.error("Error creating post:", e);
+    }
+})
 
-blogRouter.post('/', (c) => c.text('Blog - Post'))
 
-blogRouter.put('/', (c) => c.text('Blog - Post'))
+blogRouter.put('/', async (c) => {
+    const prisma = new PrismaClient({
+        datasourceUrl: c.env?.DATABASE_URL,
+    }).$extends(withAccelerate());
+    try {
+
+        const body = await c.req.json();
+
+        const updatedPost = await prisma.post.update({
+            where: {
+                id: body.id,
+            },
+            data: {
+                title: body.title,
+                content: body.content,
+            },
+        });
+
+        return c.json({ message: 'Post updated successfully', post: updatedPost });
+    } catch (e) {
+        console.error("Error updating post:", e);
+
+    }
+});
 
 blogRouter.get('/:id', (c) => c.text('Blog - Get'))
 blogRouter.get('/bulk', (c) => c.text('Bulk - Post'))
